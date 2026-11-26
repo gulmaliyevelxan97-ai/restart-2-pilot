@@ -20,6 +20,7 @@ const copy = {
  invalid:['Проверьте название и время. Для публикации заполните начало.','Adı və vaxtı yoxlayın. Dərc etmək üçün başlanğıc vaxtını yazın.','Check the title and times. Publication requires a start time.'],
  error:['Не удалось подтвердить действие. Проверьте программу после обновления.','Əməliyyat təsdiqlənmədi. Yenilədikdən sonra proqramı yoxlayın.','The action could not be confirmed. Check the programme after refreshing.'],
  stale:['Пункт изменился. Обновите список перед повторной попыткой.','Bənd dəyişib. Yenidən cəhd etməzdən əvvəl siyahını yeniləyin.','The item has changed. Refresh the list before retrying.'],
+ overlap:['Время пересекается с опубликованным пунктом этой группы.','Vaxt bu qrupun dərc edilmiş bəndi ilə üst-üstə düşür.','This overlaps a published item for this cohort.'],
  refresh:['Обновить программу','Proqramı yenilə','Refresh programme']
 };
 
@@ -55,6 +56,18 @@ export function programmeSaveArgs(data, cohort, item) {
   p_title:title,p_description:item?.published ? item.description : data.description ?? '',
   p_starts_at:start,p_ends_at:end
  };
+}
+
+export function programmeOverlaps(items,{p_cohort_id:cohort,p_item_id:id,p_starts_at:start,p_ends_at:end}) {
+ if (!start) return false;
+ const begins=Date.parse(start);
+ return items.some(item=>{
+  if (!item.published || item.cohort_id!==cohort || item.id===id || !item.starts_at) return false;
+  const otherStart=Date.parse(item.starts_at);
+  if (begins===otherStart) return true;
+  return begins<otherStart ? Boolean(end && Date.parse(end)>otherStart) :
+   Boolean(item.ends_at && Date.parse(item.ends_at)>begins);
+ });
 }
 
 export async function mentorProgrammeEditor({outlet,client,user,lang,esc,current}) {
@@ -122,6 +135,10 @@ export async function mentorProgrammeEditor({outlet,client,user,lang,esc,current
    message.textContent=t('invalid');
    return;
   }
+  if ((publish || item?.published) && programmeOverlaps(snapshot.items,args)) {
+   message.textContent=t('overlap');
+   return;
+  }
   if (publish) {
    if (!item || item.published || !args.p_starts_at) {message.textContent=t('invalid');return;}
    const changed=['title','description','start','end'].some(name=>
@@ -137,7 +154,7 @@ export async function mentorProgrammeEditor({outlet,client,user,lang,esc,current
    await result(client.rpc(publish?'restart_publish_retreat_programme_item':'restart_save_retreat_programme_item',args));
    await load(publish?'shared':'saved',cohort);
   } catch (error) {
-   if (current()) message.textContent=t(error.code==='40001'?'stale':'error');
+   if (current()) message.textContent=t(error.code==='23P01'?'overlap':error.code==='40001'?'stale':'error');
   } finally {
    busy=false;
    buttons.forEach(button=>{button.disabled=false;});
