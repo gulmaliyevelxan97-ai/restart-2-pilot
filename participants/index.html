@@ -5,6 +5,14 @@
 <body><main><header><p>RESTART RETREAT</p><h1>WHITE &amp; BLACK EXPERIENCE</h1></header>
 <p role="status" id="status">Загружаем форму входа…</p>
 <section id="gate"><h2>Регистрация пока закрыта</h2><p>Здесь можно войти в уже созданный аккаунт или восстановить пароль.</p></section>
+<form id="register" hidden><h2>Создать аккаунт RESTART</h2>
+<label>Имя<input name="firstName" autocomplete="given-name" maxlength="79" required></label>
+<label>Фамилия<input name="lastName" autocomplete="family-name" maxlength="80" required></label>
+<label>Email<input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+<label>Пароль<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+<label>Повторите пароль<input name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+<label><input name="consent" type="checkbox" value="yes" required> Согласен использовать имя и email для создания аккаунта RESTART и связи по моей заявке.</label>
+<button>Зарегистрироваться</button></form>
 <form id="login" hidden><h2>Вход в RESTART</h2><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Пароль<input name="password" type="password" autocomplete="current-password" required></label><button>Войти</button></form>
 <form id="recover" hidden><h2>Восстановить пароль</h2><label>Email<input name="email" type="email" autocomplete="email" required></label><button>Отправить письмо</button></form>
 <form id="recovery-code" hidden><h2>Ввести код из письма</h2>
@@ -12,5 +20,9 @@
 <label>Одноразовый код<input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required></label>
 <button>Проверить код</button></form>
 <form id="password" hidden><h2>Новый пароль</h2><label>Пароль<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><label>Повторите пароль<input name="confirmation" type="password" autocomplete="new-password" minlength="12" required></label><button>Сохранить и войти заново</button></form>
-<section id="account" hidden><h2>Вы вошли в RESTART</h2><div id="retreat-access" aria-live="polite"></div><div class="account-actions"><button id="refresh-access" type="button">Обновить статус и программу</button><button id="logout" type="button">Выйти</button></div></section>
+<section id="account" hidden><h2>Вы вошли в RESTART</h2><div id="retreat-access" aria-live="polite"></div>
+<form id="application" hidden><h3>Подать заявку на ретрит</h3>
+<label>Имя и фамилия<input name="name" autocomplete="name" maxlength="160" required></label>
+<label><input name="consent" type="checkbox" value="yes" required> Согласен передать имя наставнику для рассмотрения заявки.</label>
+<button>Отправить заявку</button></form><div class="account-actions"><button id="refresh-access" type="button">Обновить статус и программу</button><button id="logout" type="button">Выйти</button></div></section>
 <a href="../app/#retreat/programme">Посмотреть публичную программу ретрита</a></main></body></html>

@@ -9,15 +9,30 @@ const el=id=>document.getElementById(id);
 const notice=message=>{el('status').textContent=message;};
 let recovery=false;
 const recoveryKey='restart.participant.recovery.user';
+const intakePattern=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+async function intakeCohort(){
+ const {data,error}=await client.rpc('restart_public_retreat_intake');
+ return !error && typeof data==='string' && intakePattern.test(data)?data:null;
+}
 let accessRevision=0;
 function show(mode){
  for(const id of ['gate','login','recover','recovery-code','password','account']){
   el(id).hidden=mode==='login'?!['gate','login','recover','recovery-code'].includes(id):id!==mode;
  }
+ el('register').hidden=true;
+ el('application').hidden=true;
  const revision=++accessRevision;
+ if(mode==='login') void updateRegistration(revision);
  el('retreat-access').textContent='';
  el('retreat-access').removeAttribute('aria-busy');
  if(mode==='account') void refreshAccess(revision);
+}
+
+async function updateRegistration(revision){
+ try{
+  const cohort=await intakeCohort();
+  if(revision===accessRevision && cohort){el('register').hidden=false;el('gate').hidden=true;}
+ }catch{}
 }
 
 async function refreshAccess(revision){
@@ -26,6 +41,7 @@ async function refreshAccess(revision){
  button.disabled=true;
  target.setAttribute('aria-busy','true');
  target.textContent='Проверяем доступ к ретриту…';
+ el('application').hidden=true;
  try{
   const identity=await auth.getUser();
   if(identity.error || !identity.data.user) throw new Error('Authentication required');
@@ -42,6 +58,12 @@ async function refreshAccess(revision){
    target.textContent=status==='pending'?'Ваша заявка на рассмотрении.':
     status==='declined'?'Заявка не одобрена. Уточните детали у организатора.':
     'Закрытая программа доступна после одобрения заявки наставником.';
+   if(!status && await intakeCohort() && revision===accessRevision){
+    const form=el('application');
+    const name=identity.data.user.user_metadata?.full_name;
+    if(typeof name==='string' && !form.elements.name.value) form.elements.name.value=name.slice(0,160);
+    form.hidden=false;
+   }
    return;
   }
   const programme=await client.from('restart_retreat_programme_items')
@@ -112,6 +134,35 @@ async function initialize(){
  show(data.session?'account':'login');
  notice('');
 }
+function validName(name){
+ return name.length>0 && name.length<=160 && !/[\u0000-\u001f\u007f-\u009f]/u.test(name);
+}
+guard('register',async ({firstName,lastName,email,password,confirmation,consent})=>{
+ const name=firstName.trim()+' '+lastName.trim();
+ if(!validName(firstName.trim()) || !validName(lastName.trim()) || !validName(name) || consent!=='yes'){
+  notice('Проверьте имя, фамилию и согласие.');return;
+ }
+ if(password!==confirmation || Array.from(password).length<12 || new TextEncoder().encode(password).length>72){
+  notice('Пароли должны совпадать. Допустимо от 12 символов и не более 72 байт.');return;
+ }
+ if(!await intakeCohort()){show('login');notice('Регистрация пока закрыта.');return;}
+ const {data,error}=await auth.signUp({email,password,options:{emailRedirectTo:callback,data:{full_name:name,registration_data_consent_version:1}}});
+ if(error){notice(error.status===429?'Слишком много запросов. Подождите и проверьте последнее письмо.':'Регистрация не завершилась. Проверьте данные или обратитесь к организатору.');return;}
+ el('register').reset();
+ if(data.session){await auth.signOut({scope:'local'});show('login');notice('Регистрация временно недоступна. Обратитесь к организатору.');return;}
+ notice('Проверьте почту и откройте ссылку подтверждения в этом браузере.');
+});
+guard('application',async ({name,consent})=>{
+ const fullName=name.trim();
+ if(!validName(fullName) || consent!=='yes'){notice('Проверьте имя и согласие.');return;}
+ const cohort=await intakeCohort();
+ if(!cohort){el('application').hidden=true;notice('Приём заявок закрыт.');return;}
+ const {error}=await client.rpc('restart_submit_retreat_admission',{p_cohort_id:cohort,p_full_name:fullName});
+ if(error){notice('Не удалось отправить заявку. Обновите статус перед повтором.');return;}
+ el('application').reset();
+ notice('Заявка отправлена наставнику.');
+ await refreshAccess(++accessRevision);
+});
 guard('login',async ({email,password})=>{
  const {error}=await auth.signInWithPassword({email,password});
  if(error){notice(error.code==='email_not_confirmed'?'Подтвердите email по ссылке из письма.':'Проверьте email и пароль.');return;}
@@ -149,6 +200,7 @@ el('refresh-access').onclick=()=>{
 el('logout').onclick=async ()=>{
  const {error}=await auth.signOut({scope:'local'});
  if(error){notice('Не удалось завершить сеанс. Повторите попытку.');return;}
+ el('application').reset();
  sessionStorage.removeItem(recoveryKey);show('login');notice('Вы вышли из аккаунта.');
 };
 initialize().catch(()=>notice('Не удалось загрузить форму. Обновите страницу.'));
