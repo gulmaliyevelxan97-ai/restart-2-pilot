@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src https://lpsudmemxqkywkpixgae.supabase.co; form-action 'none'; base-uri 'none'">
+<title>RESTART RETREAT · Вход участника</title><link rel="stylesheet" href="participant.css"><script type="module" src="participant.mjs"></script></head>
+<body><main><header><p>RESTART RETREAT</p><h1>WHITE &amp; BLACK EXPERIENCE</h1></header>
+<p role="status" id="status">Загружаем форму входа…</p>
+<section id="gate"><h2>Регистрация пока закрыта</h2><p>Здесь можно войти в уже созданный аккаунт или восстановить пароль.</p></section>
+<form id="login" hidden><h2>Вход в RESTART</h2><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Пароль<input name="password" type="password" autocomplete="current-password" required></label><button>Войти</button></form>
+<form id="recover" hidden><h2>Восстановить пароль</h2><label>Email<input name="email" type="email" autocomplete="email" required></label><button>Отправить письмо</button></form>
+<form id="password" hidden><h2>Новый пароль</h2><label>Пароль<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><label>Повторите пароль<input name="confirmation" type="password" autocomplete="new-password" minlength="12" required></label><button>Сохранить и войти заново</button></form>
+<section id="account" hidden><h2>Вы вошли в RESTART</h2><button id="logout" type="button">Выйти</button></section>
+<a href="../app/#retreat/programme">Посмотреть публичную программу ретрита</a></main></body></html>
