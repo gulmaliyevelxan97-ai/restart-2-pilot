@@ -16,11 +16,15 @@ function show(mode){
  }
  const revision=++accessRevision;
  el('retreat-access').textContent='';
+ el('retreat-access').removeAttribute('aria-busy');
  if(mode==='account') void refreshAccess(revision);
 }
 
 async function refreshAccess(revision){
  const target=el('retreat-access');
+ const button=el('refresh-access');
+ button.disabled=true;
+ target.setAttribute('aria-busy','true');
  target.textContent='Проверяем доступ к ретриту…';
  try{
   const identity=await auth.getUser();
@@ -34,7 +38,10 @@ async function refreshAccess(revision){
   if(membership.error || admission.error) throw new Error('Access check failed');
   const cohorts=membership.data.map(row=>row.cohort_id);
   if(!cohorts.length){
-   target.textContent=admission.data[0]?.status==='pending'?'Ваша заявка на рассмотрении.':'Закрытая программа доступна после одобрения заявки наставником.';
+   const status=admission.data[0]?.status;
+   target.textContent=status==='pending'?'Ваша заявка на рассмотрении.':
+    status==='declined'?'Заявка не одобрена. Уточните детали у организатора.':
+    'Закрытая программа доступна после одобрения заявки наставником.';
    return;
   }
   const programme=await client.from('restart_retreat_programme_items')
@@ -53,7 +60,12 @@ async function refreshAccess(revision){
   }
   target.append(list);
  }catch{
-  if(revision===accessRevision) target.textContent='Не удалось проверить доступ. Обновите страницу и попробуйте снова.';
+  if(revision===accessRevision) target.textContent='Не удалось проверить доступ. Нажмите «Обновить статус и программу», чтобы повторить.';
+ }finally{
+  if(revision===accessRevision){
+   button.disabled=false;
+   target.removeAttribute('aria-busy');
+  }
  }
 }
 function openRecovery(session){
@@ -131,6 +143,9 @@ guard('password',async ({password,confirmation})=>{
  if(result.error){notice('Пароль изменён. Закройте вкладку и войдите снова.');return;}
  recovery=false;sessionStorage.removeItem(recoveryKey);el('password').reset();show('login');notice('Пароль изменён. Войдите с новым паролем.');
 });
+el('refresh-access').onclick=()=>{
+ if(!el('account').hidden && !el('refresh-access').disabled) void refreshAccess(++accessRevision);
+};
 el('logout').onclick=async ()=>{
  const {error}=await auth.signOut({scope:'local'});
  if(error){notice('Не удалось завершить сеанс. Повторите попытку.');return;}
