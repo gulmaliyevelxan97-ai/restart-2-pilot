@@ -1,3 +1,5 @@
+import {bindRetreatOfficial} from './retreat-official.mjs';
+import {bindRetreatOpening} from './retreat-opening.mjs';
 import {renderRetreatLetter,bindRetreatLetter} from './retreat-letter.mjs';
 import {retreatControlTitle,retreatControlSection,retreatControlPage} from './retreat-control.mjs';
 import {renderRetreatPreparation,bindRetreatPreparation} from './retreat-preparation.mjs';
@@ -560,6 +562,8 @@ function render() {
  }
  bindRetreatPreparation(screen,lang());
  bindRetreatLetter(screen,lang());
+ bindRetreatOpening(screen);
+ bindRetreatOfficial(screen,lang());
  const retreatOutlet = document.getElementById('retreat-mentor-outlet');
  if (retreatOutlet) {
   const user = cloud?.user;
