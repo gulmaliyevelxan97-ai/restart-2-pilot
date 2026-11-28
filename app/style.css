@@ -374,7 +374,10 @@ html{scroll-padding-block-end:var(--nav-clearance)}
 }
 
 .retreat-photo{display:block;width:100%;height:auto;border-radius:.9rem}
-.retreat-cover{aspect-ratio:16/9;object-fit:cover;margin-block:.5rem}
+.retreat-cover{margin-block:.5rem}
+.retreat-hero-figure{margin:0}
+.retreat-hero-figure figcaption{font-size:.75rem;color:#e4d5b1}
+.retreat-stage-status{display:block;margin-top:.2rem}
 .retreat-edition{font-size:clamp(.9rem,3vw,1.2rem);letter-spacing:.1em}
 .retreat-hero>.panel{background:transparent;border:0;padding:.4rem 0;box-shadow:none;color:inherit}
 .retreat-hero>.panel>h2{display:none}
@@ -449,3 +452,6 @@ html{scroll-padding-block-end:var(--nav-clearance)}
 .retreat-horizon {text-align:center;padding:clamp(2rem,7vw,4rem) 1rem;background:linear-gradient(#fff4d9,#efe1bb 70%,#d9daba 70%);color:#252c20}
 .retreat-horizon h2 {color:inherit;font-family:Georgia,serif}
 .retreat-horizon span {display:block;color:#8d6124;font-size:3rem;line-height:1}
+.retreat-rules{display:grid;gap:.65rem;padding:0;list-style:none}
+.retreat-rules li{display:grid;grid-template-columns:1.25rem minmax(0,1fr);gap:.55rem;padding:.75rem;border-radius:.7rem;background:#ae894d14}
+.retreat-rules span{color:inherit;font-weight:700}

@@ -81,6 +81,8 @@ const guidedLabels={
  done:['Сохранить и завершить','Saxla və bitir','Save and finish'],
  edit:['Вернуться к ответам','Cavablara qayıt','Return to answers'],
  saved:['Практика завершена','Praktika tamamlandı','Practice complete'],
+ clear:['Удалить ответы этой практики','Bu praktikanın cavablarını sil','Delete these answers'],
+ confirm:['Удалить ответы этой практики из вкладки?','Bu praktikanın cavabları tabdan silinsin?','Delete these answers from this tab?'],
  failed:['Не удалось сохранить черновик.','Qaralamanı saxlamaq mümkün olmadı.','Could not save the draft.']
 };
 
@@ -109,7 +111,9 @@ export function renderRetreatGuided(lang,kind,esc,storage=globalThis.sessionStor
    '<label>'+questions[step][language]+'<textarea rows="4" maxlength="'+limit+'">'+esc(answers[step])+'</textarea></label>'+
    '<div class="actions">'+(step?'<button type="button" data-guided-action="back">'+t('back')+'</button>':'')+
    '<button type="button" data-guided-action="skip">'+t('skip')+'</button><button type="button" data-guided-action="next">'+
-   t(step===questions.length-1?'done':'next')+'</button></div>')+'<p role="status" data-guided-status></p></section>';
+   t(step===questions.length-1?'done':'next')+'</button></div>')+
+  '<button type="button" data-guided-action="clear">'+t('clear')+'</button>'+
+  '<p role="status" data-guided-status></p></section>';
 }
 
 export function bindRetreatGuided(outlet,lang,esc) {
@@ -133,8 +137,13 @@ export function bindRetreatGuided(outlet,lang,esc) {
  };
  for (const button of panel.querySelectorAll('[data-guided-action]')) button.onclick=()=>{
   const action=button.dataset.guidedAction;
-  const next=action==='edit'?0:initial.step+(action==='back'?-1:1);
-  if (!save({...initial,step:next})) return;
+  if (action==='clear') {
+   if (!confirm(guidedLabels.confirm[Math.max(0,languages.indexOf(lang))])) return;
+   if (!save({answers:initial.answers.map(()=>''),step:0})) return;
+  } else {
+   const next=action==='edit'?0:initial.step+(action==='back'?-1:1);
+   if (!save({...initial,step:next})) return;
+  }
   panel.outerHTML=renderRetreatGuided(lang,kind,esc);
   bindRetreatGuided(outlet,lang,esc);
   outlet.querySelector('[data-retreat-guided] textarea, [data-retreat-guided] button')?.focus();

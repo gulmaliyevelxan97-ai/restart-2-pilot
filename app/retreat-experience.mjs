@@ -8,6 +8,7 @@ import {renderRetreatOpening} from './retreat-opening.mjs';
 
 const title = 'RESTART RETREAT';
 const media = './retreat-media/';
+const heroImage = 'pool-meditation-94da0dcf.webp';
 const copy = {
  entry:['Открыть раздел ретрита','Retrit bölməsini aç','Explore the retreat'],
  welcome:['Добро пожаловать','Xoş gəlmisən','Welcome'],
@@ -36,11 +37,18 @@ const copy = {
  myIntention:['Моё намерение','Niyyətim','My intention'],
  mentor:['Мой наставник','Mentorum','My mentor'],
  pool:['Бассейн виллы','Villanın hovuzu','Villa pool'],
+ atmosphere:['Визуализация атмосферы ретрита','Retrit atmosferinin vizual təsviri','Visualisation of the retreat atmosphere'],
+ whiteAttire:['Белая одежда','Ağ geyim','White clothing'],
+ blackAttire:['Чёрная одежда','Qara geyim','Black clothing'],
+ packingNote:['Возьми личные вещи для ночёвки. Плавки или купальник — по желанию.','Gecələmək üçün lazım olan şəxsi əşyalarını götür. Çimərlik geyimi istəyə bağlıdır.','Bring personal items for an overnight stay. Swimwear is optional.'],
+ assignmentPending:['Ожидает назначения наставником','Mentorun təyinatı gözlənilir','Awaiting mentor assignment'],
  villa:['Фотография виллы','Villanın fotosu','Villa photograph'],
  lounge:['Гостиная виллы','Villanın qonaq otağı','Villa lounge'],
  illustration:['Концептуальная визуализация','Konsept vizualı','Concept illustration'],
  attire:['WHITE EXPERIENCE — белая одежда. BLACK EXPERIENCE — чёрная одежда. Плавки или купальник — по желанию.','WHITE EXPERIENCE üçün ağ, BLACK EXPERIENCE üçün qara geyim. Çimərlik geyimi istəyə bağlıdır.','White clothing for WHITE EXPERIENCE, black clothing for BLACK EXPERIENCE. Swimwear is optional.'],
  rules:['Участие и личные границы','İştirak və şəxsi sərhədlər','Participation and personal boundaries'],
+ presence:['Уважай себя и других. Делись только тем, чем хочешь поделиться. Бережно относись к личным историям, без давления и осуждения.','Özünə və başqalarına hörmət et. Yalnız paylaşmaq istədiyini danış. Şəxsi hekayələrə təzyiq və mühakimə olmadan yanaş.','Respect yourself and others. Share only what you wish to share. Treat personal stories with care, without pressure or judgement.'],
+ support:['Если почувствуешь дискомфорт, сообщи наставнику.','Narahatlıq hiss etsən, mentora bildir.','Tell your mentor if you feel uncomfortable.'],
  principles:['Практики добровольны. Можно отказаться или остановиться в любой момент. Уважайте личные границы и конфиденциальность. Прикосновения, фото и видео требуют предварительного согласия.','Praktikalar könüllüdür. İstənilən vaxt imtina edə və ya dayana bilərsiniz. Şəxsi sərhədlərə və məxfiliyə hörmət edin. Toxunuş, foto və video çəkilişi üçün əvvəlcədən razılıq alınmalıdır.','Practices are optional. You may decline or stop at any time. Respect personal boundaries and confidentiality. Touch, photos and video require prior consent.'],
  registration:['Регистрация','Qeydiyyat','Registration'],
  readiness:['Забота о себе','Özünə qayğı','Self-care'],
@@ -120,18 +128,23 @@ export function renderRetreatExperience(lang,{section='',signedIn=false,intentio
  const photo=(file,label)=>'<img class="retreat-photo" src="'+media+file+'" alt="'+t(label)+'" loading="lazy" decoding="async">';
  const conceptImage=file=>'<figure>'+photo(file,'illustration')+'<figcaption>'+t('illustration')+'</figcaption></figure>';
  const flow=panel('preparation','<ol class="retreat-stages"><li><a href="https://gulmaliyevelxan97-ai.github.io/restart-2-pilot/participants/">'+t('registration')+'</a></li>'+
-  ['readiness','currentState','selfDiscovery'].map(key=>'<li>'+(signedIn?'<a href="#retreat-forms">'+t(key)+'</a>':t(key))+'</li>').join('')+
+  ['readiness','currentState','selfDiscovery'].map(key=>'<li>'+(signedIn?'<a href="#retreat-forms">'+t(key)+'</a>':t(key)+
+  '<small class="retreat-stage-status">'+t('assignmentPending')+'</small>')+'</li>').join('')+
   '<li><a href="#retreat/opening">'+t('meditation')+'</a></li>'+
   '<li><a href="#retreat/intention">'+t('myIntention')+'</a></li><li><a href="#retreat/opening">'+t('checklist')+'</a></li></ol><p>'+t('formsAccess')+'</p>');
  const concept=panel('concept','<p>WHITE &amp; BLACK EXPERIENCE</p><div class="retreat-experiences">'+
   '<details class="retreat-white"><summary>WHITE EXPERIENCE</summary><p>'+t('white')+'</p>'+conceptImage('white-concept.webp')+'</details>'+
   '<details class="retreat-black"><summary>BLACK EXPERIENCE</summary><p>'+t('black')+'</p>'+conceptImage('black-concept.webp')+'</details></div>');
+ const attire=panel('dress','<div class="retreat-experiences"><article class="retreat-white"><h3>WHITE EXPERIENCE</h3><p>'+
+  t('whiteAttire')+'</p>'+conceptImage('white-concept.webp')+'</article><article class="retreat-black"><h3>BLACK EXPERIENCE</h3><p>'+
+  t('blackAttire')+'</p>'+conceptImage('black-concept.webp')+'</article></div>');
  const content={
   '':()=>panel('welcome','<p>'+t('philosophy')+'</p>')+ (signedIn?'<div id="retreat-event-details-outlet"></div>':'')+concept,
   programme:()=>renderRetreatOfficial(lang)+(signedIn?panel('programme',link('retreat-programme','programme')):'')+concept,
   opening:()=>panel('opening','<div class="retreat-villa-gallery">'+photo('villa.webp','villa')+photo('villa-pool.webp','pool')+photo('villa-lounge.webp','lounge')+'</div>'+
-    '<p>'+t('attire')+'</p>'+renderRetreatOfficial(lang,{summaryOnly:true})+
-    (signedIn?'<div id="retreat-event-details-outlet"></div>':'<p>'+['Маршрут доступен в кабинете после одобрения заявки.','Marşrut müraciət təsdiqləndikdən sonra kabinetdə görünür.','Directions appear in your account after approval.'][language]+'</p>'))+panel('rules','<p>'+t('principles')+'</p>')+
+    renderRetreatOfficial(lang,{summaryOnly:true})+
+    (signedIn?'<div id="retreat-event-details-outlet"></div>':'<p>'+['Маршрут доступен в кабинете после одобрения заявки.','Marşrut müraciət təsdiqləndikdən sonra kabinetdə görünür.','Directions appear in your account after approval.'][language]+'</p>'))+attire+panel('packing','<p>'+t('packingNote')+'</p>')+panel('rules','<ul class="retreat-rules">'+['presence','principles','support'].map((key,i)=>
+     '<li><span aria-hidden="true">'+['◇','✓','↔'][i]+'</span>'+t(key)+'</li>').join('')+'</ul>')+
     '<section id="retreat-checklist" class="panel retreat-panel"><h2>'+t('checklist')+'</h2>'+preparation+'</section>'+renderRetreatOpening(lang),
   preparation:()=>flow+
     panel('prepare','<div class="actions">'+link('retreat/opening','opening')+link('practice/breathing','breathe')+link('practice/meditation','meditate')+'</div>'),
@@ -144,7 +157,7 @@ export function renderRetreatExperience(lang,{section='',signedIn=false,intentio
  };
  return '<a class="link" href="#today">'+t('back')+'</a>'+back+'<header class="retreat-feature retreat-hero retreat-hero--edition">'+
   '<h1>RESTART RETREAT</h1><p class="retreat-edition">WHITE &amp; BLACK EXPERIENCE</p><span class="eyebrow">BODY · MIND · SPIRIT</span>'+
-  (section?'':renderRetreatHeroClock(lang)+'<img class="retreat-photo retreat-cover" src="'+media+'villa.webp" alt="'+t('villa')+'" fetchpriority="high" decoding="async">'+
+  (section?'':renderRetreatHeroClock(lang)+'<figure class="retreat-hero-figure"><img class="retreat-photo retreat-cover" src="'+media+heroImage+'" alt="" width="1536" height="1152" fetchpriority="high" decoding="async"><figcaption>'+t('atmosphere')+'</figcaption></figure>'+
    renderRetreatOfficial(lang,{summaryOnly:true})+'<div class="retreat-primary">'+link('retreat/opening','opening')+'</div>'+
    '<div class="retreat-check-progress"><label for="retreat-home-progress">'+t('checklist')+' · '+prepCount+' / 6</label>'+
    '<progress id="retreat-home-progress" value="'+prepCount+'" max="6"></progress></div>')+'</header>'+
