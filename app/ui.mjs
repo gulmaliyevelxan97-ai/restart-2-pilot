@@ -410,7 +410,7 @@ const week = selectedDate => renderWeeklyProgram({lang:lang(),sessions:state().s
 const retreat = section => renderRetreatExperience(lang(),{
  section,
  letter: section==='letter' ? renderRetreatLetter(lang(),esc) : '',
- preparation: section==='preparation' ? renderRetreatPreparation(lang(),esc) : '',
+ preparation: section==='opening' ? renderRetreatPreparation(lang(),esc) : '',
  reflection: section==='after' ? renderRetreatPreparation(lang(),esc,undefined,true) : '',
  signedIn: Boolean(cloud?.user && !cloud.user.is_anonymous),
  intention: !cloud?.user ? renderRetreatIntention(lang(),readRetreatIntention(),esc) : ''

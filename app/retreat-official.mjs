@@ -1,39 +1,36 @@
 import {schoolTimeZone} from './booking-calendar.mjs';
 import {languages} from './state.mjs';
 
-export const retreatStart='2026-11-28T14:00:00+04:00';
-export const retreatEnd='2026-11-29T14:00:00+04:00';
+export const retreatStart='2026-11-29T16:00:00+04:00';
+export const retreatEnd='2026-11-30T14:00:00+04:00';
 
 const sessions=[
- ['WHITE','2026-11-28',[
-  ['14:00','Прибытие, регистрация и чай','Gəliş, qeydiyyat və çay','Arrival, check-in and tea'],
-  ['15:00','Открытие','Açılış','Opening'],
-  ['15:15','Йога','Yoqa','Yoga'],
-  ['16:00','Звуковая практика: шавасана, медитация, поющие чаши, ханг','Səs praktikası: şavasana, meditasiya, səs kasaları, handpan','Sound healing: savasana, meditation, singing bowls, handpan'],
-  ['17:00','Рефлексия','Düşüncələrə vaxt','Reflection'],
-  ['17:10','Полезный перекус','Sağlam qəlyanaltı','Healthy snack'],
-  ['17:30','Лекция BODY MIND SPIRIT','BODY MIND SPIRIT mühazirəsi','BODY MIND SPIRIT talk'],
-  ['18:00','Чайная церемония','Çay mərasimi','Tea ceremony'],
-  ['18:30','Барбекю и полезная еда','Manqal və sağlam yeməklər','BBQ and healthy food'],
-  ['20:30','Переход из WHITE в BLACK','WHITE mərhələsindən BLACK mərhələsinə keçid','White to Black']
+ ['WHITE','2026-11-29',[
+  ["15:00","Прибытие участников","İştirakçıların gəlişi","Participant arrival"],
+  ["16:00","Официальное открытие","Rəsmi açılış","Official opening"],
+  ["16:15","Йога","Yoqa","Yoga"],
+  ["17:00","Sound Healing","Sound Healing","Sound Healing"],
+  ["18:00","Рефлексия","Düşüncə vaxtı","Reflection"],
+  ["18:10","Лёгкий перекус","Yüngül qəlyanaltı","Light snack"],
+  ["18:30","BBQ и общение","Manqal və ünsiyyət","BBQ and conversation"],
+  ["20:30","Отдых и смена одежды","İstirahət və geyim dəyişikliyi","Rest and change of clothes"]
  ]],
- ['BLACK','2026-11-28',[
-  ['21:00','Body Experience','Body Experience','Body Experience'],
-  ['21:30','FIRE & MOVEMENT','FIRE & MOVEMENT','FIRE & MOVEMENT',['По решению организаторов. Альтернатива — спокойная практика движения.',
-   'Təşkilatçıların qərarından asılıdır. Alternativ — sakit hərəkət praktikası.',
-   'Subject to organiser approval. Alternative: a gentle movement session.']],
-  ['22:30','Круг с хангом','Handpan ətrafında dairə','Handpan circle'],
-  ['22:45','Отдых и общение','İstirahət və ünsiyyət','Rest and social time']
+ ['BLACK','2026-11-29',[
+  ["21:00","Открытие","Açılış","Opening"],
+  ["21:10","Дыхание дракона","Əjdaha nəfəsi","Dragon Breath",["Только после подтверждения безопасности организатором.","Yalnız təşkilatçı təhlükəsizliyi təsdiqlədikdən sonra.","Subject to the organiser’s safety approval."]],
+  ["21:40","Круг откровенности","Səmimi söhbət dairəsi","Sharing circle"],
+  ["22:10","Свобода движения","Hərəkət azadlığı","Freedom of movement"],
+  ["22:30","Вечерняя медитация","Axşam meditasiyası","Evening meditation"],
+  ["22:50","Круг благодарности","Minnətdarlıq dairəsi","Gratitude circle"],
+  ["23:00","Свободное время и отдых","Sərbəst vaxt və istirahət","Free time and rest"]
  ]],
- ['REBIRTH','2026-11-29',[
-  ['09:00','Подъём','Oyanış','Wake-up'],
-  ['09:30','Йога','Yoqa','Yoga'],
-  ['10:15','Медитация','Meditasiya','Meditation'],
-  ['10:45','Завтрак','Səhər yeməyi','Breakfast'],
-  ['12:00','Свободное время','Sərbəst vaxt','Free time'],
-  ['13:00','Заключительная рефлексия и письмо себе в будущее','Yekun düşüncələr və gələcəkdəki özünə məktub','Final reflection and letter to your future self'],
-  ['13:30','Закрытие','Bağlanış','Closing'],
-  ['14:00','Завершение ретрита','Retritin sonu','Retreat ends']
+ ['REBIRTH','2026-11-30',[
+  ["09:00","Пробуждение","Oyanış","Wake-up"],
+  ["09:30","Утренняя медитация","Səhər meditasiyası","Morning meditation"],
+  ["10:00","Завтрак","Səhər yeməyi","Breakfast"],
+  ["11:00","Свободное время","Sərbəst vaxt","Free time"],
+  ["13:30","Сбор личных вещей","Şəxsi əşyaların yığılması","Pack personal belongings"],
+  ["14:00","Выезд","Yola düşmə","Departure"]
  ]]
 ];
 
@@ -44,9 +41,7 @@ const copy={
  inProgress:['Ретрит идёт','Retrit davam edir','The retreat is underway'],
  ended:['Ретрит завершён','Retrit başa çatıb','The retreat has ended'],
  days:['д','g','d'],hours:['ч','s','h'],minutes:['мин','dəq','min'],seconds:['с','san','sec'],
- leads:['Программу ведёт Эльхан Гюльмалыев. Чайную церемонию проводит приглашённый чайный мастер.',
-  'Proqramı Elxan Gülmalıyev aparır. Çay mərasimini dəvət olunmuş çay ustası keçirir.',
-  'Elxan Gülmalıyev leads the programme. A guest tea master leads the tea ceremony.']
+ arrival:['Прибытие','Gəliş','Arrival'],
 };
 
 const languageIndex=lang=>Math.max(0,languages.indexOf(lang));
@@ -74,10 +69,11 @@ export function renderRetreatOfficial(lang,{now=new Date(),summaryOnly=false}={}
  const displayDay=new Intl.DateTimeFormat(languages[index],{day:'numeric',month:'long',year:'numeric',timeZone:schoolTimeZone});
  const label=day=>displayDay.format(new Date(day+'T12:00:00+04:00'));
  return '<section class="panel" aria-labelledby="retreat-official-title"><h2 id="retreat-official-title">'+t('programme')+'</h2>'+
-  '<p><time datetime="'+retreatStart+'">'+label('2026-11-28')+' 14:00</time> – '+
-  '<time datetime="'+retreatEnd+'">'+label('2026-11-29')+' 14:00</time> · '+t('timeZone')+'</p>'+
+  '<p><time datetime="'+retreatStart+'">'+label('2026-11-29')+' 16:00</time> – '+
+  '<time datetime="'+retreatEnd+'">'+label('2026-11-30')+' 14:00</time> · '+t('timeZone')+'</p>'+
   '<p role="timer" aria-live="off" data-retreat-official-clock>'+countdownText(lang,now)+'</p>'+
-  (summaryOnly?'':'<p>'+t('leads')+'</p>'+
+  '<p>'+t('arrival')+' · '+label('2026-11-29')+' 15:00</p>'+
+  (summaryOnly?'':
   sessions.map(([phase,day,items])=>'<section><h3>'+phase+' · '+label(day)+'</h3><ol class="history">'+
    items.map(row=>'<li><time datetime="'+day+'T'+row[0]+':00+04:00">'+row[0]+'</time><div>'+
     row[index+1]+(row[4]?'<small>'+row[4][index]+'</small>':'')+'</div></li>').join('')+'</ol></section>') .join(''))+

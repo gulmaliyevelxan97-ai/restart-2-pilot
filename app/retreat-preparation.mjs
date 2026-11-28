@@ -5,9 +5,13 @@ const reflectionLimit=1200;
 const checklist={
  details:['Уточнил(а) место и время у организатора','Məkanı və vaxtı təşkilatçı ilə dəqiqləşdirdim','I checked the place and time with the organiser'],
  clothes:['Подготовил(а) удобную одежду','Rahat geyim hazırladım','I set out comfortable clothes'],
- water:['Подготовил(а) воду','Su hazırladım','I packed water']
+ water:['Подготовил(а) воду','Su hazırladım','I packed water'],
+ programme:['Ознакомился(-ась) с программой','Proqramla tanış oldum','I reviewed the programme'],
+ white:['Подготовил(а) белую одежду','Ağ geyim hazırladım','I packed white clothing'],
+ black:['Подготовил(а) чёрную одежду','Qara geyim hazırladım','I packed black clothing']
 };
 const copy={
+ progress:['Отмечено в чек-листе','Siyahıda qeyd edilib','Checklist completed'],
  title:['Подготовка к ретриту','Retritə hazırlıq','Prepare for the retreat'],
  prompt:['Что хочется сохранить из этого опыта?','Bu təcrübədən nəyi yadda saxlamaq istəyirsiniz?','What would you like to take away from the experience?'],
  private:['Отметки и запись хранятся в этом браузере. Их можно удалить в любой момент.','İşarələr və qeyd bu brauzerdə saxlanılır. Onları istənilən vaxt silə bilərsiniz.','Your checklist and note are stored in this browser. You can delete them at any time.'],
@@ -58,7 +62,7 @@ export function renderRetreatPreparation(lang,esc,storage,reflection=false) {
   '<textarea name="reflection" rows="4" maxlength="'+reflectionLimit+'">'+esc(current.reflection)+'</textarea></label>'+
   '<button type="submit">'+t('save')+'</button></form>';
  return '<div data-retreat-preparation><p>'+t('private')+'</p>'+
-  (reflection ? form : '<h3>'+t('title')+'</h3><div data-preparation-items>'+items+'</div>')+
+  (reflection ? form : '<h3>'+t('title')+'</h3><p>'+t('progress')+' <span data-preparation-count>'+current.items.length+'</span> / '+Object.keys(checklist).length+'</p><div data-preparation-items>'+items+'</div>')+
   '<div class="actions"><button type="button" data-preparation-clear>'+t('clear')+'</button></div>'+
   '<p data-preparation-status role="status"></p></div>';
 }
@@ -71,12 +75,20 @@ export function bindRetreatPreparation(outlet,lang,storage) {
  const form=section.querySelector('[data-preparation-form]');
  const field=form?.elements.reflection;
  const status=section.querySelector('[data-preparation-status]');
+ const count=section.querySelector('[data-preparation-count]');
  const selected=()=>controls.filter(control=>control.checked).map(control=>control.name);
  const show=key=>{status.textContent=t(key);};
 
  for (const control of controls) control.onchange=()=>{
   const current=readRetreatPreparation(storage);
-  show(writeRetreatPreparation({...current,items:selected()},storage)?'saved':'failed');
+  const items=selected();
+  if (!writeRetreatPreparation({...current,items},storage)) {
+   control.checked=current.items.includes(control.name);
+   show('failed');
+   return;
+  }
+  if (count) count.textContent=String(items.length);
+  show('saved');
  };
 
  if (form) form.onsubmit=event=>{
@@ -89,6 +101,7 @@ export function bindRetreatPreparation(outlet,lang,storage) {
   if (!confirm(t('confirm'))) return;
   if (!writeRetreatPreparation({},storage)) {show('failed');return;}
   controls.forEach(control=>{control.checked=false;});
+  if (count) count.textContent='0';
   if (field) field.value='';
   show('cleared');
  };

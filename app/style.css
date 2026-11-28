@@ -372,3 +372,13 @@ html{scroll-padding-block-end:var(--nav-clearance)}
 @media (max-width: 480px) {
  .retreat-date-fields {grid-template-columns:minmax(0,1fr);}
 }
+
+.retreat-photo{display:block;width:100%;height:auto;border-radius:.9rem}
+.retreat-cover{aspect-ratio:16/9;object-fit:cover;margin-block:.5rem}
+.retreat-edition{font-size:clamp(.9rem,3vw,1.2rem);letter-spacing:.1em}
+.retreat-hero>.panel{background:transparent;border:0;padding:.4rem 0;box-shadow:none;color:inherit}
+.retreat-hero>.panel>h2{display:none}
+.retreat-hero>.button{justify-self:start}
+.retreat-villa-gallery,.retreat-experiences figure{margin:0 0 .75rem}
+.retreat-experiences figcaption{font-size:.78rem;padding:.35rem 0}
+.retreat-stages>li{padding-block:.3rem}
