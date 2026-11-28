@@ -7,6 +7,11 @@ const copy = {
   'Rahat otur. Nəfəsini təbii ritmində saxla. Bədəninin nəyə söykəndiyini hiss et. Fikrin yayınsa, diqqətini sakitcə hisslərinə qaytar. İstənilən an dayana bilərsən.',
   'Get comfortable. Let your breathing follow its natural rhythm. Notice what is supporting your body. If your mind wanders, gently return to those sensations. You can stop at any time.'
  ],
+ rhythm:[
+  'Круг помогает удерживать внимание. Дыши в своём ритме, без задержек.',
+  'Dairə diqqətini toplamağa kömək edir. Nəfəsini saxlamadan öz ritmində nəfəs al.',
+  'Let the circle help you focus. Breathe at your own pace, without holding your breath.'
+ ],
  start:['Начать · 5 минут','Başla · 5 dəqiqə','Start · 5 minutes'],
  stop:['Остановить','Dayandır','Stop'],
  skip:['Перейти к намерению','Niyyətə keç','Continue to intention'],
@@ -22,7 +27,8 @@ export function openingTime(seconds) {
 export function renderRetreatOpening(lang) {
  const t=translate(lang);
  return '<section class="panel retreat-panel" data-retreat-opening><h2>'+t('title')+'</h2><p>'+t('guidance')+'</p>'+
-  '<p role="timer" aria-label="'+t('timer')+'" data-opening-time>'+openingTime(300)+'</p>'+
+  '<p>'+t('rhythm')+'</p><div class="opening-breathing" aria-hidden="true"><span></span></div>'+
+  '<p role="timer" aria-live="off" aria-label="'+t('timer')+'" data-opening-time>'+openingTime(300)+'</p>'+
   '<div class="actions"><button type="button" data-opening-start>'+t('start')+'</button>'+
   '<button type="button" data-opening-stop hidden>'+t('stop')+'</button>'+
   '<a class="button" href="#retreat/intention">'+t('skip')+'</a></div></section>';
@@ -37,6 +43,7 @@ export function bindRetreatOpening(outlet) {
  let timer;
  const reset=()=>{
   clearInterval(timer);
+  delete panel.dataset.openingActive;
   clock.textContent=openingTime(300);
   start.hidden=false;
   stop.hidden=true;
@@ -46,13 +53,14 @@ export function bindRetreatOpening(outlet) {
   start.hidden=true;
   stop.hidden=false;
   stop.focus();
+  panel.dataset.openingActive='true';
   const end=Date.now()+300000;
   timer=setInterval(()=>{
    if (!panel.isConnected) {clearInterval(timer);return;}
    const remaining=Math.max(0,Math.ceil((end-Date.now())/1000));
    clock.textContent=openingTime(remaining);
    if (remaining===0) {
-    clearInterval(timer);
+    reset();
     location.hash='retreat/intention';
    }
   },250);

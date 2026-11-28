@@ -382,3 +382,30 @@ html{scroll-padding-block-end:var(--nav-clearance)}
 .retreat-villa-gallery,.retreat-experiences figure{margin:0 0 .75rem}
 .retreat-experiences figcaption{font-size:.78rem;padding:.35rem 0}
 .retreat-stages>li{padding-block:.3rem}
+
+.opening-breathing {
+ display:grid;
+ place-items:center;
+ width:min(9rem,60vw);
+ aspect-ratio:1;
+ margin:1.25rem auto .75rem;
+ border:1px solid #b99a554d;
+ border-radius:50%;
+}
+.opening-breathing span {
+ width:72%;
+ aspect-ratio:1;
+ border:1px solid #d0ab63;
+ border-radius:50%;
+ background:radial-gradient(circle at 40% 35%,#f5db96,#9d7940 38%,#16352e 75%);
+ box-shadow:0 0 1.4rem #ba9a5944;
+}
+[data-opening-time]{text-align:center;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference) {
+ [data-opening-active="true"] .opening-breathing span {
+  animation:opening-breathe 8s ease-in-out infinite;
+ }
+ @keyframes opening-breathe {
+  50% {transform:scale(1.28);box-shadow:0 0 2rem #ba9a5977}
+ }
+}
