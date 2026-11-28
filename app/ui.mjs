@@ -1,3 +1,4 @@
+import {bindRetreatGuided,renderRetreatGuided} from './retreat-intention.mjs';
 import {bindRetreatOfficial} from './retreat-official.mjs';
 import {bindRetreatOpening} from './retreat-opening.mjs';
 import {renderRetreatLetter,bindRetreatLetter} from './retreat-letter.mjs';
@@ -411,9 +412,9 @@ const retreat = section => renderRetreatExperience(lang(),{
  section,
  letter: section==='letter' ? renderRetreatLetter(lang(),esc) : '',
  preparation: section==='opening' ? renderRetreatPreparation(lang(),esc) : '',
- reflection: section==='after' ? renderRetreatPreparation(lang(),esc,undefined,true) : '',
+ reflection: section==='after' ? renderRetreatGuided(lang(),'reflection',esc)+renderRetreatPreparation(lang(),esc,undefined,true) : '',
  signedIn: Boolean(cloud?.user && !cloud.user.is_anonymous),
- intention: !cloud?.user ? renderRetreatIntention(lang(),readRetreatIntention(),esc) : ''
+ intention: section==='intention' ? renderRetreatGuided(lang(),'intention',esc)+(!cloud?.user && readRetreatIntention()?renderRetreatIntention(lang(),readRetreatIntention(),esc):'') : ''
 });
 const screens = {retreat, today, practices, practice, path, journal, schedule, profile, mentor, account, academy, week};
 
@@ -561,6 +562,7 @@ function render() {
   } else outlet.innerHTML = '<a class="button" href="#account">'+t('cloudLogin')+'</a>';
  }
  bindRetreatPreparation(screen,lang());
+ bindRetreatGuided(screen,lang(),esc);
  bindRetreatLetter(screen,lang());
  bindRetreatOpening(screen);
  bindRetreatOfficial(screen,lang());

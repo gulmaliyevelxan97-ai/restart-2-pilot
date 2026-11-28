@@ -66,14 +66,31 @@ async function refreshAccess(revision){
    }
    return;
   }
-  const programme=await client.from('restart_retreat_programme_items')
-   .select('title,description,starts_at').in('cohort_id',cohorts).eq('published',true).order('starts_at').limit(100);
+  const [programme,details]=await Promise.all([
+   client.from('restart_retreat_programme_items')
+    .select('title,description,starts_at').in('cohort_id',cohorts).eq('published',true).order('starts_at').limit(100),
+   client.from('restart_retreat_event_details').select('location').in('cohort_id',cohorts).eq('published',true)
+  ]);
   if(revision!==accessRevision) return;
   if(programme.error) throw programme.error;
   target.textContent=programme.data.length?'Ваша программа ретрита':'Доступ подтверждён. Закрытое расписание пока не опубликовано.';
+  const map=details.data?.find(row=>/^https:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+(?:\?g_st=ac)?$/.test(row.location))?.location;
+  if(map){
+   const directions=document.createElement('a');
+   directions.href=map;
+   directions.target='_blank';
+   directions.rel='noopener noreferrer';
+   directions.textContent='Построить маршрут';
+   target.append(directions);
+  }
+  const preparation=document.createElement('a');
+  preparation.href='../app/#retreat/preparation';
+  preparation.textContent='Открыть подготовку в приложении';
+  target.append(preparation);
   if(!programme.data.length) return;
   const formatter=new Intl.DateTimeFormat('ru',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Baku'});
-  const list=document.createElement('ul');
+  const list=document.createElement('ol');
+  list.className='approved-timeline';
   for(const item of programme.data){
    const row=document.createElement('li');
    row.textContent=formatter.format(new Date(item.starts_at))+' · '+item.title;

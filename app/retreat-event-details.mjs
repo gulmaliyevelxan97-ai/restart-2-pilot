@@ -93,8 +93,12 @@ export function renderRetreatEventDetails({groups,details},lang,esc,now=new Date
   const days=instant?retreatDaysUntil(item.event_date,now):null;
   const when=instant?'<dt>'+t('date')+'</dt><dd><time datetime="'+esc(item.event_date)+'">'+
    esc(format.format(instant))+'</time></dd>':'';
+  const routeLabel=['Построить маршрут','Marşrutu aç','Get directions'][Math.max(0,languages.indexOf(lang))];
+  const isMapsLink=value=>/^https:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+(?:\?g_st=ac)?$/.test(value);
+  const display=(field,value)=>field==='location'&&isMapsLink(value)?
+   '<a class="button" href="'+esc(value)+'" target="_blank" rel="noopener noreferrer">'+routeLabel+'</a>':text(value);
   const detailFields=fields
-   .filter(([field])=>item[field]).map(([field,key])=>'<dt>'+t(key)+'</dt><dd>'+text(item[field])+'</dd>').join('');
+   .filter(([field])=>item[field]).map(([field,key])=>'<dt>'+t(key)+'</dt><dd>'+display(field,item[field])+'</dd>').join('');
   return '<article class="panel"><h2>'+title+'</h2>'+
    (days===null?'':days===0?'<p>'+t('today')+'</p>':'<p>'+t('countdown')+' · '+new Intl.NumberFormat(locale(lang)).format(days)+'</p>')+
    '<dl>'+when+detailFields+'</dl></article>';

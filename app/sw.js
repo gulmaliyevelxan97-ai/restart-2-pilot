@@ -1,5 +1,5 @@
 /* The app has an independent scope and cache. Bump VERSION when shell assets change. */
-const VERSION = 'pilot-1137650d9cf3ec25';
+const VERSION = 'pilot-472a0bcd9f375d04';
 const base = new URL(self.registration.scope);
 const prefix = 'restart-app:' + base.pathname + ':';
 const name = prefix + VERSION;

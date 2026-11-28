@@ -4,8 +4,8 @@ const storageKey='restart.retreat.preparation.v1';
 const reflectionLimit=1200;
 const checklist={
  details:['Уточнил(а) место и время у организатора','Məkanı və vaxtı təşkilatçı ilə dəqiqləşdirdim','I checked the place and time with the organiser'],
- clothes:['Подготовил(а) удобную одежду','Rahat geyim hazırladım','I set out comfortable clothes'],
- water:['Подготовил(а) воду','Su hazırladım','I packed water'],
+ rules:['Ознакомился(-ась) с правилами','Qaydalarla tanış oldum','I read the guidelines'],
+ journey:['Ознакомился(-ась) с маршрутом подготовки','Hazırlıq addımları ilə tanış oldum','I reviewed the preparation steps'],
  programme:['Ознакомился(-ась) с программой','Proqramla tanış oldum','I reviewed the programme'],
  white:['Подготовил(а) белую одежду','Ağ geyim hazırladım','I packed white clothing'],
  black:['Подготовил(а) чёрную одежду','Qara geyim hazırladım','I packed black clothing']
@@ -27,7 +27,7 @@ const index=lang=>Math.max(0,languages.indexOf(lang));
 function normalize(value) {
  const items=Array.isArray(value?.items)?value.items:[];
  return {
-  items:Object.keys(checklist).filter(item=>items.includes(item)),
+  items:[...Object.keys(checklist),'clothes','water'].filter(item=>items.includes(item)),
   reflection:typeof value?.reflection==='string'?value.reflection.slice(0,reflectionLimit):''
  };
 }
@@ -38,6 +38,10 @@ export function readRetreatPreparation(storage) {
  } catch {
   return normalize(null);
  }
+}
+
+export function retreatChecklistCount(storage) {
+ return readRetreatPreparation(storage).items.filter(item=>Object.hasOwn(checklist,item)).length;
 }
 
 export function writeRetreatPreparation(value,storage) {
@@ -55,6 +59,7 @@ export function writeRetreatPreparation(value,storage) {
 export function renderRetreatPreparation(lang,esc,storage,reflection=false) {
  const current=readRetreatPreparation(storage);
  const language=index(lang);
+ const checked=Object.keys(checklist).filter(item=>current.items.includes(item)).length;
  const t=key=>copy[key][language];
  const items=Object.entries(checklist).map(([key,label])=>'<label class="check"><input type="checkbox" name="'+key+
    '"'+(current.items.includes(key)?' checked':'')+'>'+label[language]+'</label>').join('');
@@ -62,7 +67,7 @@ export function renderRetreatPreparation(lang,esc,storage,reflection=false) {
   '<textarea name="reflection" rows="4" maxlength="'+reflectionLimit+'">'+esc(current.reflection)+'</textarea></label>'+
   '<button type="submit">'+t('save')+'</button></form>';
  return '<div data-retreat-preparation><p>'+t('private')+'</p>'+
-  (reflection ? form : '<h3>'+t('title')+'</h3><p>'+t('progress')+' <span data-preparation-count>'+current.items.length+'</span> / '+Object.keys(checklist).length+'</p><div data-preparation-items>'+items+'</div>')+
+  (reflection ? form : '<h3>'+t('title')+'</h3><p>'+t('progress')+' <span data-preparation-count>'+checked+'</span> / '+Object.keys(checklist).length+'</p><div data-preparation-items>'+items+'</div>')+
   '<div class="actions"><button type="button" data-preparation-clear>'+t('clear')+'</button></div>'+
   '<p data-preparation-status role="status"></p></div>';
 }
@@ -82,7 +87,7 @@ export function bindRetreatPreparation(outlet,lang,storage) {
  for (const control of controls) control.onchange=()=>{
   const current=readRetreatPreparation(storage);
   const items=selected();
-  if (!writeRetreatPreparation({...current,items},storage)) {
+  if (!writeRetreatPreparation({...current,items:[...items,...current.items.filter(item=>!Object.hasOwn(checklist,item))]},storage)) {
    control.checked=current.items.includes(control.name);
    show('failed');
    return;

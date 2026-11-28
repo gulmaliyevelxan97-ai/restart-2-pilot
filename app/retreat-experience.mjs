@@ -1,4 +1,7 @@
-import {renderRetreatOfficial} from './retreat-official.mjs';
+import {renderRetreatHeroClock,renderRetreatOfficial} from './retreat-official.mjs';
+import {retreatChecklistCount} from './retreat-preparation.mjs';
+import {readRetreatLetter} from './retreat-letter.mjs';
+import {readRetreatIntention} from './retreat-intention.mjs';
 import {languages} from './state.mjs';
 
 import {renderRetreatOpening} from './retreat-opening.mjs';
@@ -32,6 +35,7 @@ const copy = {
  after:['После ретрита','Retritdən sonra','After the retreat'],
  myIntention:['Моё намерение','Niyyətim','My intention'],
  mentor:['Мой наставник','Mentorum','My mentor'],
+ pool:['Бассейн виллы','Villanın hovuzu','Villa pool'],
  villa:['Фотография виллы','Villanın fotosu','Villa photograph'],
  lounge:['Гостиная виллы','Villanın qonaq otağı','Villa lounge'],
  illustration:['Концептуальная визуализация','Konsept vizualı','Concept illustration'],
@@ -50,7 +54,10 @@ const copy = {
  white:['Свет, осознанность и открытость.','İşıq, fərqindəlik və açıqlıq.','Light, awareness and openness.'],
  black:['Тишина, глубина и внутреннее исследование.','Sükut, dərinlik və özünü kəşf.','Stillness, depth and inner exploration.'],
  pending:['Подробности появятся после утверждения организатором.','Təfərrüatlar təşkilatçı təsdiqlədikdən sonra burada görünəcək.','Details will appear here after the organiser confirms them.'],
- afterIntro:['Вернись сюда после ретрита, чтобы осмыслить свой опыт.','Təcrübəni dəyərləndirmək üçün retritdən sonra bura qayıt.','Come back after the retreat to reflect on your experience.'],
+ afterIntro:['Самое важное — то, что ты унесёшь с собой.','Ən vacibi özünlə aparacağındır.','What matters most is what you take with you.'],
+ afterTitle:['Это только начало','Bu hələ başlanğıcdır','This is only the beginning'],
+ closing:['Сила тела. Ясность разума. Гармония внутри.','Bədənin gücü. Zehnin aydınlığı. Daxili harmoniya.','Strength of body. Clarity of mind. Harmony within.'],
+ followup:['Можно вернуться к своим ответам через 24 часа, 3 дня или 7 дней.','Cavablarına 24 saat, 3 gün və ya 7 gün sonra qayıda bilərsən.','Return to your answers in 24 hours, 3 days or 7 days.'],
  date:['Дата и время','Tarix və saat','Date and time'],
  programme:['Полная программа','Tam proqram','Full programme'],
  location:['Место проведения','Keçirildiyi yer','Location'],
@@ -75,24 +82,6 @@ export function renderRetreatCard(lang) {
   '<strong>'+title+'</strong><span>'+t('entry')+' <span aria-hidden="true">→</span></span></a>';
 }
 
-const welcomeMessage = [
- [`Дорогие мои,`,`Впереди у нас два особенных дня. Два дня, посвящённых не внешнему миру, а нашему внутреннему пространству.`,
-  `Мы будем двигаться, чувствовать, познавать себя, встречаться со своими эмоциями, светом и тенью.`,
-  `Здесь вам не нужно никому ничего доказывать. Позвольте себе быть настоящими.`,
-  `Приходите с открытым сердцем, доверием к себе и готовностью услышать свой внутренний голос.`,
-  `Я буду рядом с вами на этом пути.`,`С любовью и уважением, ваш наставник.`],
- [`Əzizlərim,`,`Qarşıda bizi iki xüsusi gün gözləyir. Bu iki günü xarici dünyaya deyil, daxili aləmimizə həsr edəcəyik.`,
-  `Hərəkət edəcəyik, hiss edəcəyik, özümüzü tanıyacaq, duyğularımızla, işığımızla və kölgəmizlə üzləşəcəyik.`,
-  `Burada heç kimə heç nə sübut etməli deyilsiniz. Özünüz kimi olmağa icazə verin.`,
-  `Açıq ürəklə, özünüzə güvənərək və daxili səsinizi eşitməyə hazır olaraq gəlin.`,
-  `Bu yolda yanınızda olacağam.`,`Sevgi və hörmətlə, mentorunuz.`],
- [`Dear friends,`,`Two special days lie ahead. Two days devoted to our inner world rather than the world outside.`,
-  `We will move, feel, get to know ourselves, and meet our emotions, our light and our shadow.`,
-  `Here, you have nothing to prove to anyone. Give yourself permission to be who you are.`,
-  `Come with an open heart, trust in yourself and a willingness to hear your inner voice.`,
-  `I will be alongside you on this journey.`,`With love and respect, your mentor.`]
-];
-
 const sections = [
  ['', 'overview'], ['opening','opening'], ['preparation','preparation'],
  ['intention','myIntention'], ['programme','programme'], ['mentor','mentor'], ['letter','letter'], ['after','after']
@@ -107,8 +96,27 @@ export function renderRetreatExperience(lang,{section='',signedIn=false,intentio
  const link=(route,label)=>'<a class="button" href="#'+route+'">'+t(label)+'</a>';
  const panel=(key,body)=>'<section class="panel retreat-panel"><h2>'+t(key)+'</h2>'+body+'</section>';
  const restricted='<p>'+t('guest')+'</p>';
- const nav=sections.filter(([id])=>section || id!=='opening' && id).map(([id,label])=>'<a href="#retreat'+(id?'/'+id:'')+'"'+
-  (id===section?' aria-current="page"':'')+'>'+t(label)+'</a>').join('');
+ const language=Math.max(0,languages.indexOf(lang));
+ const prepCount=retreatChecklistCount();
+ const descriptions=[
+  ['Место, правила и вещи','Məkan, qaydalar və əşyalar','Venue, guidelines and packing'],
+  ['Твои шаги до встречи','Görüşə qədər addımların','Your steps before we meet'],
+  ['Вопросы для себя','Özün üçün suallar','Questions for yourself'],
+  ['Все события по времени Баку','Bakı vaxtı ilə bütün tədbirlər','Every session in Baku time'],
+  ['Задания, связь и обратная связь','Tapşırıqlar, əlaqə və rəy','Tasks, messages and feedback'],
+  ['Сохрани слова для будущего себя','Gələcək özünə sözlərini saxla','Keep a note for your future self'],
+  ['Возьми опыт с собой','Təcrübəni özünlə apar','Carry the experience with you']
+ ];
+ const icons=['◈','✓','◇','◷','↔','✉','☀'];
+ const saved=['Сохранено','Saxlanılıb','Saved'][language];
+ const statuses=[prepCount===6?saved:prepCount?prepCount+' / 6':'', '',readRetreatIntention()?saved:'',
+  '', '',readRetreatLetter().text?saved:'',''];
+ const back=section?'<a class="link retreat-home-link" href="#retreat">'+t('overview')+'</a>':'';
+ const nav=section?'':'<nav class="retreat-route" aria-label="'+t('nav')+'"><ol>'+
+  sections.slice(1).map(([id,label],i)=>'<li><a href="#retreat/'+id+'"><span class="retreat-step-number" aria-hidden="true">'+
+   String(i+1).padStart(2,'0')+'</span><span class="retreat-step-icon" aria-hidden="true">'+icons[i]+'</span><span><strong>'+
+   t(label)+'</strong><small>'+descriptions[i][language]+'</small>'+(statuses[i]?'<small class="retreat-step-status">'+statuses[i]+'</small>':'')+
+   '</span><span aria-hidden="true">›</span></a></li>').join('')+'</ol></nav>';
  const photo=(file,label)=>'<img class="retreat-photo" src="'+media+file+'" alt="'+t(label)+'" loading="lazy" decoding="async">';
  const conceptImage=file=>'<figure>'+photo(file,'illustration')+'<figcaption>'+t('illustration')+'</figcaption></figure>';
  const flow=panel('preparation','<ol class="retreat-stages"><li><a href="https://gulmaliyevelxan97-ai.github.io/restart-2-pilot/participants/">'+t('registration')+'</a></li>'+
@@ -121,20 +129,24 @@ export function renderRetreatExperience(lang,{section='',signedIn=false,intentio
  const content={
   '':()=>panel('welcome','<p>'+t('philosophy')+'</p>')+ (signedIn?'<div id="retreat-event-details-outlet"></div>':'')+concept,
   programme:()=>renderRetreatOfficial(lang)+(signedIn?panel('programme',link('retreat-programme','programme')):'')+concept,
-  opening:()=>panel('opening','<div class="retreat-villa-gallery">'+photo('villa-lounge.webp','lounge')+'</div>'+
-    '<p>'+t('attire')+'</p>')+panel('rules','<p>'+t('principles')+'</p>')+
+  opening:()=>panel('opening','<div class="retreat-villa-gallery">'+photo('villa.webp','villa')+photo('villa-pool.webp','pool')+photo('villa-lounge.webp','lounge')+'</div>'+
+    '<p>'+t('attire')+'</p>'+renderRetreatOfficial(lang,{summaryOnly:true})+
+    (signedIn?'<div id="retreat-event-details-outlet"></div>':'<p>'+['Маршрут доступен в кабинете после одобрения заявки.','Marşrut müraciət təsdiqləndikdən sonra kabinetdə görünür.','Directions appear in your account after approval.'][language]+'</p>'))+panel('rules','<p>'+t('principles')+'</p>')+
     '<section id="retreat-checklist" class="panel retreat-panel"><h2>'+t('checklist')+'</h2>'+preparation+'</section>'+renderRetreatOpening(lang),
-  preparation:()=>flow+panel('mentorWelcome',welcomeMessage[Math.max(0,languages.indexOf(lang))].map(line=>'<p>'+line+'</p>').join(''))+
+  preparation:()=>flow+
     panel('prepare','<div class="actions">'+link('retreat/opening','opening')+link('practice/breathing','breathe')+link('practice/meditation','meditate')+'</div>'),
-  intention:()=>signedIn?panel('intention',link('retreat-forms','intention')):intention,
-  mentor:()=>panel('mentor',signedIn?'<div class="actions">'+link('retreat-tasks','tasks')+link('retreat-connect','connect')+'</div>':restricted),
+  intention:()=>intention+(signedIn?panel('intention',link('retreat-forms','intention')):''),
+  mentor:()=>panel('mentor',signedIn?'<div class="actions">'+link('retreat-tasks','tasks')+link('retreat-connect','connect')+'</div>':restricted+'<a class="button" href="https://gulmaliyevelxan97-ai.github.io/restart-2-pilot/participants/">'+['Войти или зарегистрироваться','Daxil ol və ya qeydiyyatdan keç','Sign in or register'][language]+'</a>'),
   letter:()=>letter,
-  after:()=>panel('after','<p>'+t('afterIntro')+'</p>'+link('retreat/intention','myIntention')+link('retreat/letter','letter')+reflection+'<div class="retreat-next-step"><h3>'+t('nextStep')+'</h3><div class="actions">'+link('journal','journal')+link('practice/meditation','meditate')+'</div></div>'+
-    (signedIn?'<div class="actions">'+link('retreat-forms','intention')+link('retreat-connect','connect')+'</div>':''))
+  after:()=>'<section class="panel retreat-horizon"><span aria-hidden="true">◯</span><h2>'+t('afterTitle')+'</h2><p>'+t('afterIntro')+'</p></section>'+reflection+
+   panel('after','<p>'+t('followup')+'</p>'+link('retreat/intention','myIntention')+link('retreat/letter','letter')+'<div class="retreat-next-step"><h3>'+t('nextStep')+'</h3><div class="actions">'+link('journal','journal')+link('practice/meditation','meditate')+'</div></div>'+
+    (signedIn?'<div class="actions">'+link('retreat-forms','intention')+link('retreat-connect','connect')+'</div>':'')+'<p>'+t('closing')+'</p>')
  };
- return '<a class="link" href="#today">'+t('back')+'</a><header class="retreat-feature retreat-hero">'+
-  '<span class="eyebrow">BODY · MIND · SPIRIT</span><h1>RESTART RETREAT</h1><p class="retreat-edition">WHITE &amp; BLACK EXPERIENCE</p>'+
-  (section?'':'<img class="retreat-photo retreat-cover" src="'+media+'villa.webp" alt="'+t('villa')+'" fetchpriority="high" decoding="async">'+
-   renderRetreatOfficial(lang,{summaryOnly:true})+link('retreat/opening','opening'))+'</header>'+
-  '<nav class="retreat-nav" aria-label="'+t('nav')+'">'+nav+'</nav>'+content[retreatSection(section)]();
+ return '<a class="link" href="#today">'+t('back')+'</a>'+back+'<header class="retreat-feature retreat-hero retreat-hero--edition">'+
+  '<h1>RESTART RETREAT</h1><p class="retreat-edition">WHITE &amp; BLACK EXPERIENCE</p><span class="eyebrow">BODY · MIND · SPIRIT</span>'+
+  (section?'':renderRetreatHeroClock(lang)+'<img class="retreat-photo retreat-cover" src="'+media+'villa.webp" alt="'+t('villa')+'" fetchpriority="high" decoding="async">'+
+   renderRetreatOfficial(lang,{summaryOnly:true})+'<div class="retreat-primary">'+link('retreat/opening','opening')+'</div>'+
+   '<div class="retreat-check-progress"><label for="retreat-home-progress">'+t('checklist')+' · '+prepCount+' / 6</label>'+
+   '<progress id="retreat-home-progress" value="'+prepCount+'" max="6"></progress></div>')+'</header>'+
+  nav+content[retreatSection(section)]();
 }

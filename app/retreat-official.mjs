@@ -37,10 +37,10 @@ const sessions=[
 const copy={
  programme:['Официальная программа','Rəsmi proqram','Official programme'],
  timeZone:['Время Баку','Bakı vaxtı','Baku time'],
- countdown:['До начала ретрита','Retritin başlamasına qalıb','Time until the retreat starts'],
+ countdown:['До начала твоего RESTART осталось','Retritin başlamasına qalıb','Time until the retreat starts'],
  inProgress:['Ретрит идёт','Retrit davam edir','The retreat is underway'],
  ended:['Ретрит завершён','Retrit başa çatıb','The retreat has ended'],
- days:['д','g','d'],hours:['ч','s','h'],minutes:['мин','dəq','min'],seconds:['с','san','sec'],
+ days:['Дни','Gün','Days'],hours:['Часы','Saat','Hours'],minutes:['Минуты','Dəqiqə','Minutes'],seconds:['Секунды','Saniyə','Seconds'], after:['После ретрита','Retritdən sonra','After the retreat'],
  arrival:['Прибытие','Gəliş','Arrival'],
 };
 
@@ -55,12 +55,23 @@ export function retreatOfficialClock(now=new Date()) {
   minutes:Math.floor(total/60)%60,seconds:total%60};
 }
 
+const clockUnits=['days','hours','minutes','seconds'];
+
+export function renderRetreatHeroClock(lang,now=new Date()) {
+ const t=key=>copy[key][languageIndex(lang)];
+ const clock=retreatOfficialClock(now);
+ let content='<p>'+t(clock.phase)+'</p>';
+ if (clock.phase==='countdown') content+='<div class="retreat-clock-grid">'+
+  clockUnits.map(key=>'<div><strong data-clock-unit="'+key+'">'+String(clock[key]).padStart(2,'0')+'</strong><span>'+t(key)+'</span></div>').join('')+'</div>';
+ if (clock.phase==='ended') content+='<a class="button" href="#retreat/after">'+t('after')+'</a>';
+ return '<div class="retreat-clock" data-retreat-hero-clock data-phase="'+clock.phase+'" aria-live="off">'+content+'</div>';
+}
+
 function countdownText(lang,now) {
  const index=languageIndex(lang);
  const clock=retreatOfficialClock(now);
  if (clock.phase!=='countdown') return copy[clock.phase][index];
- return copy.countdown[index]+' · '+['days','hours','minutes','seconds']
-  .map(key=>clock[key]+' '+copy[key][index]).join(' ');
+ return copy.countdown[index]+' · '+clockUnits.map(key=>clock[key]+' '+copy[key][index]).join(' ');
 }
 
 export function renderRetreatOfficial(lang,{now=new Date(),summaryOnly=false}={}) {
@@ -71,10 +82,10 @@ export function renderRetreatOfficial(lang,{now=new Date(),summaryOnly=false}={}
  return '<section class="panel" aria-labelledby="retreat-official-title"><h2 id="retreat-official-title">'+t('programme')+'</h2>'+
   '<p><time datetime="'+retreatStart+'">'+label('2026-11-29')+' 16:00</time> – '+
   '<time datetime="'+retreatEnd+'">'+label('2026-11-30')+' 14:00</time> · '+t('timeZone')+'</p>'+
-  '<p role="timer" aria-live="off" data-retreat-official-clock>'+countdownText(lang,now)+'</p>'+
+  (summaryOnly?'':'<p role="timer" aria-live="off" data-retreat-official-clock>'+countdownText(lang,now)+'</p>')+
   '<p>'+t('arrival')+' · '+label('2026-11-29')+' 15:00</p>'+
   (summaryOnly?'':
-  sessions.map(([phase,day,items])=>'<section><h3>'+phase+' · '+label(day)+'</h3><ol class="history">'+
+  sessions.map(([phase,day,items])=>'<section class="retreat-timeline retreat-timeline--'+phase.toLowerCase()+'"><h3>'+(phase==='REBIRTH'?'NEW BEGINNING':phase+' EXPERIENCE')+' · '+label(day)+'</h3><ol class="history">'+
    items.map(row=>'<li><time datetime="'+day+'T'+row[0]+':00+04:00">'+row[0]+'</time><div>'+
     row[index+1]+(row[4]?'<small>'+row[4][index]+'</small>':'')+'</div></li>').join('')+'</ol></section>') .join(''))+
   '</section>';
@@ -82,7 +93,24 @@ export function renderRetreatOfficial(lang,{now=new Date(),summaryOnly=false}={}
 
 export function bindRetreatOfficial(outlet,lang) {
  const timer=outlet.querySelector('[data-retreat-official-clock]');
- if (!timer) return;
+ let hero=outlet.querySelector('[data-retreat-hero-clock]');
+ if (!timer && !hero) return;
+ if (hero) {
+  const interval=setInterval(()=>{
+   if (!hero.isConnected) {clearInterval(interval);return;}
+   const now=new Date();
+   const clock=retreatOfficialClock(now);
+   if (hero.dataset.phase!==clock.phase) {
+    const parent=hero.parentElement;
+    hero.outerHTML=renderRetreatHeroClock(lang,now);
+    hero=parent.querySelector('[data-retreat-hero-clock]');
+   } else if (clock.phase==='countdown') {
+    for (const node of hero.querySelectorAll('[data-clock-unit]')) node.textContent=String(clock[node.dataset.clockUnit]).padStart(2,'0');
+   }
+   if (clock.phase==='ended') clearInterval(interval);
+  },1000);
+  return ()=>clearInterval(interval);
+ }
  const now=new Date();
  timer.textContent=countdownText(lang,now);
  if (retreatOfficialClock(now).phase!=='countdown') return;
