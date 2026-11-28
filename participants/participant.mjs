@@ -5,8 +5,13 @@ const client=createClient('https://lpsudmemxqkywkpixgae.supabase.co',"sb_publish
 });
 const {auth}=client;
 const callback=new URL('./',location.href).href;
+const confirmationHelp='Подтвердите email по ссылке из последнего письма RESTART, затем войдите с паролем, который создали. Если письма нет, проверьте «Спам» или отправьте письмо ещё раз.';
 const el=id=>document.getElementById(id);
-const notice=message=>{el('status').textContent=message;};
+const notice=message=>{
+ const status=el('status');
+ status.textContent=message;
+ if(message) status.focus();
+};
 let recovery=false;
 const recoveryKey='restart.participant.recovery.user';
 const intakePattern=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -19,6 +24,7 @@ function show(mode){
  for(const id of ['gate','login','recover','recovery-code','password','account']){
   el(id).hidden=mode==='login'?!['gate','login','recover','recovery-code'].includes(id):id!==mode;
  }
+ el('resend-confirmation').hidden=true;
  el('register').hidden=true;
  el('application').hidden=true;
  const revision=++accessRevision;
@@ -136,10 +142,19 @@ async function initialize(){
   fragment.has('error_code')||fragment.has('access_token')||fragment.has('refresh_token');
  if(code||failed){
   history.replaceState(null,'',url.pathname);
-  if(failed){show('login');notice('Ссылка устарела или уже использована. Если в письме есть код, введите его ниже. Иначе запросите новое письмо и используйте только самое свежее.');return;}
+  if(failed){
+   show('login');
+   el('resend-confirmation').hidden=false;
+   if(fragment.get('type')==='signup' && fragment.has('access_token') && !fragment.has('error') && !fragment.has('error_code')){
+    notice('После перехода по ссылке войдите с паролем, который вы создали при регистрации.');
+   }else{
+    notice('Ссылка устарела или уже использована. Если email уже подтверждён, войдите. Иначе запросите новое письмо подтверждения. Код восстановления вводится отдельно.');
+   }
+   return;
+  }
   const flowId=url.searchParams.get('sb_flow_id');
   const {data,error}=await auth.exchangeCodeForSession(code,flowId===null?undefined:{flowId});
-  if(error){show('login');notice('Подтверждение могло пройти. Войдите или запросите новое письмо в этом браузере.');return;}
+  if(error){show('login');el('resend-confirmation').hidden=false;notice('Если вы уже нажали ссылку в письме, попробуйте войти с паролем. Если email ещё не подтверждён, отправьте письмо повторно и откройте его в этом браузере.');return;}
   if(data.redirectType==='recovery') openRecovery(data.session);
   else {sessionStorage.removeItem(recoveryKey);show('account');notice('Вход выполнен.');}
   return;
@@ -167,7 +182,9 @@ guard('register',async ({firstName,lastName,email,password,confirmation,consent}
  if(error){notice(error.status===429?'Слишком много запросов. Подождите и проверьте последнее письмо.':'Регистрация не завершилась. Проверьте данные или обратитесь к организатору.');return;}
  el('register').reset();
  if(data.session){await auth.signOut({scope:'local'});show('login');notice('Регистрация временно недоступна. Обратитесь к организатору.');return;}
- notice('Проверьте почту и откройте ссылку подтверждения в этом браузере.');
+ el('login').elements.email.value=email;
+ el('resend-confirmation').hidden=false;
+ notice('Запрос на регистрацию принят. Откройте последнее письмо RESTART в этом браузере и подтвердите email. Затем войдите со своим паролем.');
 });
 guard('application',async ({name,consent})=>{
  const fullName=name.trim();
@@ -182,10 +199,35 @@ guard('application',async ({name,consent})=>{
 });
 guard('login',async ({email,password})=>{
  const {error}=await auth.signInWithPassword({email,password});
- if(error){notice(error.code==='email_not_confirmed'?'Подтвердите email по ссылке из письма.':'Проверьте email и пароль.');return;}
+ if(error){
+  if(error.code==='email_not_confirmed'){
+   el('resend-confirmation').hidden=false;
+   notice(confirmationHelp);
+  }else if(error.status===429) notice('Слишком много попыток. Подождите перед повторным входом.');
+  else if(error.code==='invalid_credentials'){
+   el('recover').elements.email.value=email;
+   notice('Email или пароль не совпадают. Проверьте, что используете данные регистрации. Если забыли пароль, нажмите «Восстановить пароль» и введите код из письма.');
+  }else notice('Не удалось войти. Проверьте соединение и попробуйте снова.');
+  return;
+ }
  sessionStorage.removeItem(recoveryKey);
  el('login').reset();show('account');notice('');
 });
+el('resend-confirmation').onclick=async ()=>{
+ const action=el('resend-confirmation');
+ const email=el('login').elements.email;
+ if(!email.reportValidity() || action.disabled) return;
+ action.disabled=true;
+ try{
+  const {error}=await auth.resend({type:'signup',email:email.value.trim(),options:{emailRedirectTo:callback}});
+  if(error){notice(error.status===429?'Письмо уже запрашивали недавно. Подождите и проверьте последнее письмо RESTART.':'Не удалось повторно отправить письмо. Попробуйте позже.');return;}
+  notice('Если адрес ожидает подтверждения, на него придёт письмо RESTART. Откройте самую свежую ссылку в этом браузере.');
+ }catch{
+  notice('Не удалось отправить запрос. Проверьте соединение и попробуйте снова.');
+ }finally{
+  action.disabled=false;
+ }
+};
 guard('recover',async ({email})=>{
  const {error}=await auth.resetPasswordForEmail(email,{redirectTo:callback});
  if(error){

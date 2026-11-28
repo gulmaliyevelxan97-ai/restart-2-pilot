@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src https://lpsudmemxqkywkpixgae.supabase.co; form-action 'none'; base-uri 'none'">
 <title>RESTART RETREAT · Вход участника</title><link rel="stylesheet" href="participant.css"><script type="module" src="participant.mjs"></script></head>
 <body><main><header><p>RESTART RETREAT</p><h1>WHITE &amp; BLACK EXPERIENCE</h1><p>28–29 ноября 2026 · время Баку</p><p>Прибытие в 15:00 · открытие в 16:00 · выезд 29 ноября в 14:00</p></header>
-<p role="status" id="status">Загружаем форму входа…</p>
+<p role="status" id="status" tabindex="-1">Загружаем форму входа…</p>
 <section id="gate"><h2>Регистрация пока закрыта</h2><p>Здесь можно войти в уже созданный аккаунт или восстановить пароль.</p></section>
 <form id="register" hidden><h2>Создать аккаунт RESTART</h2>
 <label>Имя<input name="firstName" autocomplete="given-name" maxlength="79" required></label>
@@ -13,7 +13,7 @@
 <label>Повторите пароль<input name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
 <label><input name="consent" type="checkbox" value="yes" required> Согласен использовать имя и email для создания аккаунта RESTART и связи по моей заявке.</label>
 <button>Зарегистрироваться</button></form>
-<form id="login" hidden><h2>Вход в RESTART</h2><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Пароль<input name="password" type="password" autocomplete="current-password" required></label><button>Войти</button></form>
+<form id="login" hidden><h2>Вход в RESTART</h2><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Пароль<input name="password" type="password" autocomplete="current-password" required></label><button>Войти</button><button type="button" id="resend-confirmation" hidden>Отправить письмо подтверждения ещё раз</button></form>
 <form id="recover" hidden><h2>Восстановить пароль</h2><label>Email<input name="email" type="email" autocomplete="email" required></label><button>Отправить письмо</button></form>
 <form id="recovery-code" hidden><h2>Ввести код из письма</h2>
 <label>Email<input name="email" type="email" autocomplete="email" required></label>
