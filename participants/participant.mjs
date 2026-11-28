@@ -14,6 +14,29 @@ const notice=message=>{
 };
 let recovery=false;
 const recoveryKey='restart.participant.recovery.user';
+const invitationKey='restart.participant.pending-invitation.v1';
+const invitationPattern=/^[a-f0-9]{64}$/;
+let pendingInvitation;
+
+function rememberInvitation(){
+ const url=new URL(location.href);
+ const candidate=new URLSearchParams(url.hash.slice(1)).get('invite');
+ if(candidate!==null){
+  if(!invitationPattern.test(candidate)) return;
+  pendingInvitation=candidate;
+  try{localStorage.setItem(invitationKey,candidate);}catch{}
+  history.replaceState(null,'',url.pathname+url.search);
+ }else{
+  try{
+   const saved=localStorage.getItem(invitationKey);
+   if(invitationPattern.test(saved??'')) pendingInvitation=saved;
+  }catch{}
+ }
+}
+function forgetInvitation(){
+ pendingInvitation=undefined;
+ try{localStorage.removeItem(invitationKey);}catch{}
+}
 const intakePattern=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 async function intakeCohort(){
  const {data,error}=await client.rpc('restart_public_retreat_intake');
@@ -26,7 +49,7 @@ function show(mode){
  }
  el('resend-confirmation').hidden=true;
  el('register').hidden=true;
- el('application').hidden=true;
+ el('invitation-note').hidden=mode!=='login'||!pendingInvitation;
  const revision=++accessRevision;
  if(mode==='login') void updateRegistration(revision);
  el('retreat-access').textContent='';
@@ -47,29 +70,26 @@ async function refreshAccess(revision){
  button.disabled=true;
  target.setAttribute('aria-busy','true');
  target.textContent='Проверяем доступ к ретриту…';
- el('application').hidden=true;
  try{
   const identity=await auth.getUser();
   if(identity.error || !identity.data.user) throw new Error('Authentication required');
   const user=identity.data.user.id;
-  const [membership,admission]=await Promise.all([
-   client.from('restart_retreat_members').select('cohort_id').eq('user_id',user).eq('role','participant'),
-   client.from('restart_retreat_admissions').select('status').eq('applicant_id',user).order('submitted_at',{ascending:false}).limit(1)
-  ]);
+  let invitationRejected=false;
+  if(pendingInvitation){
+   const {error}=await client.rpc('restart_redeem_retreat_invitation',{p_token:pendingInvitation});
+   if(revision!==accessRevision) return;
+   if(error && error.code!=='42501') throw error;
+   invitationRejected=Boolean(error);
+   forgetInvitation();
+  }
+  const membership=await client.from('restart_retreat_members').select('cohort_id').eq('user_id',user).eq('role','participant');
   if(revision!==accessRevision) return;
-  if(membership.error || admission.error) throw new Error('Access check failed');
+  if(membership.error) throw new Error('Access check failed');
   const cohorts=membership.data.map(row=>row.cohort_id);
   if(!cohorts.length){
-   const status=admission.data[0]?.status;
-   target.textContent=status==='pending'?'Ваша заявка на рассмотрении.':
-    status==='declined'?'Заявка не одобрена. Уточните детали у организатора.':
-    'Закрытая программа доступна после одобрения заявки наставником.';
-   if(!status && await intakeCohort() && revision===accessRevision){
-    const form=el('application');
-    const name=identity.data.user.user_metadata?.full_name;
-    if(typeof name==='string' && !form.elements.name.value) form.elements.name.value=name.slice(0,160);
-    form.hidden=false;
-   }
+   target.textContent=invitationRejected
+    ?'Приглашение недействительно, использовано или предназначено для другого email. Откройте свою личную ссылку или обратитесь к организатору.'
+    :'Откройте личную ссылку-приглашение в этом браузере. Доступ к программе откроется автоматически после входа.';
    return;
   }
   const [programme,details]=await Promise.all([
@@ -186,17 +206,6 @@ guard('register',async ({firstName,lastName,email,password,confirmation,consent}
  el('resend-confirmation').hidden=false;
  notice('Запрос на регистрацию принят. Откройте последнее письмо RESTART в этом браузере и подтвердите email. Затем войдите со своим паролем.');
 });
-guard('application',async ({name,consent})=>{
- const fullName=name.trim();
- if(!validName(fullName) || consent!=='yes'){notice('Проверьте имя и согласие.');return;}
- const cohort=await intakeCohort();
- if(!cohort){el('application').hidden=true;notice('Приём заявок закрыт.');return;}
- const {error}=await client.rpc('restart_submit_retreat_admission',{p_cohort_id:cohort,p_full_name:fullName});
- if(error){notice('Не удалось отправить заявку. Обновите статус перед повтором.');return;}
- el('application').reset();
- notice('Заявка отправлена наставнику.');
- await refreshAccess(++accessRevision);
-});
 guard('login',async ({email,password})=>{
  const {error}=await auth.signInWithPassword({email,password});
  if(error){
@@ -259,7 +268,8 @@ el('refresh-access').onclick=()=>{
 el('logout').onclick=async ()=>{
  const {error}=await auth.signOut({scope:'local'});
  if(error){notice('Не удалось завершить сеанс. Повторите попытку.');return;}
- el('application').reset();
+ forgetInvitation();
  sessionStorage.removeItem(recoveryKey);show('login');notice('Вы вышли из аккаунта.');
 };
+rememberInvitation();
 initialize().catch(()=>notice('Не удалось загрузить форму. Обновите страницу.'));
