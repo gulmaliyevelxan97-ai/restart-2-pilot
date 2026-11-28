@@ -1,13 +1,21 @@
 import {schoolTimeZone} from './booking-calendar.mjs';
 import {languages} from './state.mjs';
 
-export const retreatStart='2026-11-29T16:00:00+04:00';
-export const retreatEnd='2026-11-30T14:00:00+04:00';
+const openingDay='2026-11-28';
+const closingDay='2026-11-29';
+const arrivalTime='15:00';
+const openingTime='16:00';
+const closingTime='14:00';
+
+const bakuInstant=(day,time)=>day+'T'+time+':00+04:00';
+
+export const retreatStart=bakuInstant(openingDay,openingTime);
+export const retreatEnd=bakuInstant(closingDay,closingTime);
 
 const sessions=[
- ['WHITE','2026-11-29',[
-  ["15:00","Прибытие участников","İştirakçıların gəlişi","Participant arrival"],
-  ["16:00","Официальное открытие","Rəsmi açılış","Official opening"],
+ ['WHITE',openingDay,[
+  [arrivalTime,"Прибытие участников","İştirakçıların gəlişi","Participant arrival"],
+  [openingTime,"Официальное открытие","Rəsmi açılış","Official opening"],
   ["16:15","Йога","Yoqa","Yoga"],
   ["17:00","Sound Healing","Sound Healing","Sound Healing"],
   ["18:00","Рефлексия","Düşüncə vaxtı","Reflection"],
@@ -15,7 +23,7 @@ const sessions=[
   ["18:30","BBQ и общение","Manqal və ünsiyyət","BBQ and conversation"],
   ["20:30","Отдых и смена одежды","İstirahət və geyim dəyişikliyi","Rest and change of clothes"]
  ]],
- ['BLACK','2026-11-29',[
+ ['BLACK',openingDay,[
   ["21:00","Открытие","Açılış","Opening"],
   ["21:10","Дыхание дракона","Əjdaha nəfəsi","Dragon Breath",["Только после подтверждения безопасности организатором.","Yalnız təşkilatçı təhlükəsizliyi təsdiqlədikdən sonra.","Subject to the organiser’s safety approval."]],
   ["21:40","Круг откровенности","Səmimi söhbət dairəsi","Sharing circle"],
@@ -24,13 +32,13 @@ const sessions=[
   ["22:50","Круг благодарности","Minnətdarlıq dairəsi","Gratitude circle"],
   ["23:00","Свободное время и отдых","Sərbəst vaxt və istirahət","Free time and rest"]
  ]],
- ['REBIRTH','2026-11-30',[
+ ['REBIRTH',closingDay,[
   ["09:00","Пробуждение","Oyanış","Wake-up"],
   ["09:30","Утренняя медитация","Səhər meditasiyası","Morning meditation"],
   ["10:00","Завтрак","Səhər yeməyi","Breakfast"],
   ["11:00","Свободное время","Sərbəst vaxt","Free time"],
   ["13:30","Сбор личных вещей","Şəxsi əşyaların yığılması","Pack personal belongings"],
-  ["14:00","Выезд","Yola düşmə","Departure"]
+  [closingTime,"Выезд","Yola düşmə","Departure"]
  ]]
 ];
 
@@ -38,7 +46,8 @@ const copy={
  programme:['Официальная программа','Rəsmi proqram','Official programme'],
  timeZone:['Время Баку','Bakı vaxtı','Baku time'],
  countdown:['До начала твоего RESTART осталось','Retritin başlamasına qalıb','Time until the retreat starts'],
- inProgress:['Ретрит идёт','Retrit davam edir','The retreat is underway'],
+ inProgress:['RESTART НАЧАЛСЯ','RESTART BAŞLADI','RESTART HAS BEGUN'],
+ startedMessage:['Твоё путешествие к себе начинается здесь','Özünə doğru səyahətin burada başlayır','Your journey back to yourself begins here'],
  ended:['Ретрит завершён','Retrit başa çatıb','The retreat has ended'],
  days:['Дни','Gün','Days'],hours:['Часы','Saat','Hours'],minutes:['Минуты','Dəqiqə','Minutes'],seconds:['Секунды','Saniyə','Seconds'], after:['После ретрита','Retritdən sonra','After the retreat'],
  arrival:['Прибытие','Gəliş','Arrival'],
@@ -63,6 +72,7 @@ export function renderRetreatHeroClock(lang,now=new Date()) {
  let content='<p>'+t(clock.phase)+'</p>';
  if (clock.phase==='countdown') content+='<div class="retreat-clock-grid">'+
   clockUnits.map(key=>'<div><strong data-clock-unit="'+key+'">'+String(clock[key]).padStart(2,'0')+'</strong><span>'+t(key)+'</span></div>').join('')+'</div>';
+ if (clock.phase==='inProgress') content+='<p>'+t('startedMessage')+'</p>';
  if (clock.phase==='ended') content+='<a class="button" href="#retreat/after">'+t('after')+'</a>';
  return '<div class="retreat-clock" data-retreat-hero-clock data-phase="'+clock.phase+'" aria-live="off">'+content+'</div>';
 }
@@ -70,6 +80,7 @@ export function renderRetreatHeroClock(lang,now=new Date()) {
 function countdownText(lang,now) {
  const index=languageIndex(lang);
  const clock=retreatOfficialClock(now);
+ if (clock.phase==='inProgress') return copy.inProgress[index]+' · '+copy.startedMessage[index];
  if (clock.phase!=='countdown') return copy[clock.phase][index];
  return copy.countdown[index]+' · '+clockUnits.map(key=>clock[key]+' '+copy[key][index]).join(' ');
 }
@@ -80,13 +91,13 @@ export function renderRetreatOfficial(lang,{now=new Date(),summaryOnly=false}={}
  const displayDay=new Intl.DateTimeFormat(languages[index],{day:'numeric',month:'long',year:'numeric',timeZone:schoolTimeZone});
  const label=day=>displayDay.format(new Date(day+'T12:00:00+04:00'));
  return '<section class="panel" aria-labelledby="retreat-official-title"><h2 id="retreat-official-title">'+t('programme')+'</h2>'+
-  '<p><time datetime="'+retreatStart+'">'+label('2026-11-29')+' 16:00</time> – '+
-  '<time datetime="'+retreatEnd+'">'+label('2026-11-30')+' 14:00</time> · '+t('timeZone')+'</p>'+
+  '<p><time datetime="'+retreatStart+'">'+label(openingDay)+' '+openingTime+'</time> – '+
+  '<time datetime="'+retreatEnd+'">'+label(closingDay)+' '+closingTime+'</time> · '+t('timeZone')+'</p>'+
   (summaryOnly?'':'<p role="timer" aria-live="off" data-retreat-official-clock>'+countdownText(lang,now)+'</p>')+
-  '<p>'+t('arrival')+' · '+label('2026-11-29')+' 15:00</p>'+
+  '<p>'+t('arrival')+' · '+label(openingDay)+' '+arrivalTime+'</p>'+
   (summaryOnly?'':
   sessions.map(([phase,day,items])=>'<section class="retreat-timeline retreat-timeline--'+phase.toLowerCase()+'"><h3>'+(phase==='REBIRTH'?'NEW BEGINNING':phase+' EXPERIENCE')+' · '+label(day)+'</h3><ol class="history">'+
-   items.map(row=>'<li><time datetime="'+day+'T'+row[0]+':00+04:00">'+row[0]+'</time><div>'+
+   items.map(row=>'<li><time datetime="'+bakuInstant(day,row[0])+'">'+row[0]+'</time><div>'+
     row[index+1]+(row[4]?'<small>'+row[4][index]+'</small>':'')+'</div></li>').join('')+'</ol></section>') .join(''))+
   '</section>';
 }
@@ -113,12 +124,12 @@ export function bindRetreatOfficial(outlet,lang) {
  }
  const now=new Date();
  timer.textContent=countdownText(lang,now);
- if (retreatOfficialClock(now).phase!=='countdown') return;
+ if (retreatOfficialClock(now).phase==='ended') return;
  const interval=setInterval(()=>{
   if (!timer.isConnected) {clearInterval(interval);return;}
   const now=new Date();
   timer.textContent=countdownText(lang,now);
-  if (retreatOfficialClock(now).phase!=='countdown') clearInterval(interval);
+  if (retreatOfficialClock(now).phase==='ended') clearInterval(interval);
  },1000);
  return ()=>clearInterval(interval);
 }
